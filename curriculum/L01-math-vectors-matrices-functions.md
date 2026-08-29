@@ -27,7 +27,13 @@ $$x \in \mathbb{R}$$
 
 A vector is an ordered collection of numbers. For example:
 
-$$x = \begin{bmatrix}2\\-1\\4\end{bmatrix} \in \mathbb{R}^3$$
+$$
+x = \begin{bmatrix}
+2 \\
+-1 \\
+4
+\end{bmatrix} \in \mathbb{R}^3
+$$
 
 There are two useful ways to think about a vector: as an ordered numerical representation and, when useful, as a geometric object with magnitude and direction. An embedding is a vector, but its coordinates do not normally correspond to human-readable features.
 
@@ -35,7 +41,12 @@ There are two useful ways to think about a vector: as an ordered numerical repre
 
 A matrix is a rectangular array. For example:
 
-$$A = \begin{bmatrix}1&2&3\\4&5&6\end{bmatrix}$$
+$$
+A = \begin{bmatrix}
+1 & 2 & 3 \\
+4 & 5 & 6
+\end{bmatrix}
+$$
 
 This matrix has 2 rows and 3 columns, so its shape is $2\times3$.
 
@@ -51,7 +62,16 @@ Do not equate "number of axes" with the strict mathematical definition of tensor
 
 Let
 
-$$x=\begin{bmatrix}2\\3\end{bmatrix},\qquad y=\begin{bmatrix}4\\-1\end{bmatrix}$$
+$$
+x=\begin{bmatrix}
+2 \\
+3
+\end{bmatrix},\qquad
+y=\begin{bmatrix}
+4 \\
+-1
+\end{bmatrix}
+$$
 
 Add vectors componentwise and multiply a vector by a scalar componentwise.
 
@@ -91,7 +111,14 @@ $$\lVert x-y\rVert_2^2=\lVert x\rVert_2^2+\lVert y\rVert_2^2-2\lVert x\rVert_2\l
 
 while direct expansion gives
 
-$$\begin{aligned}\lVert x-y\rVert_2^2&=(x-y)^T(x-y)\\&=x^Tx-2x^Ty+y^Ty\\&=\lVert x\rVert_2^2+\lVert y\rVert_2^2-2x^Ty\end{aligned}$$
+$$
+\begin{aligned}
+\lVert x-y\rVert_2^2
+&=(x-y)^T(x-y)\\
+&=x^Tx-2x^Ty+y^Ty\\
+&=\lVert x\rVert_2^2+\lVert y\rVert_2^2-2x^Ty
+\end{aligned}
+$$
 
 Equating them gives the dot-product/angle identity. Dividing by the nonzero norms gives cosine similarity.
 
@@ -99,11 +126,30 @@ Equating them gives the dot-product/angle identity. Dividing by the nonzero norm
 
 Take
 
-$$A=\begin{bmatrix}1&2&3\\4&5&6\end{bmatrix},\qquad x=\begin{bmatrix}2\\1\\0\end{bmatrix}$$
+$$
+A=\begin{bmatrix}
+1&2&3 \\
+4&5&6
+\end{bmatrix},\qquad
+x=\begin{bmatrix}
+2 \\
+1 \\
+0
+\end{bmatrix}
+$$
 
 Then
 
-$$Ax=\begin{bmatrix}1(2)+2(1)+3(0)\\4(2)+5(1)+6(0)\end{bmatrix}=\begin{bmatrix}4\\13\end{bmatrix}$$
+$$
+Ax=\begin{bmatrix}
+1(2)+2(1)+3(0) \\
+4(2)+5(1)+6(0)
+\end{bmatrix}
+=\begin{bmatrix}
+4 \\
+13
+\end{bmatrix}
+$$
 
 Each output is the dot product of one row of $A$ with $x$.
 
@@ -201,15 +247,39 @@ gives one prediction per example for a linear model.
 
 Let
 
-$$x=\begin{bmatrix}2\\1\\0\end{bmatrix},\quad W=\begin{bmatrix}1&0&2\\-1&3&1\end{bmatrix},\quad b=\begin{bmatrix}1\\-2\end{bmatrix}$$
+$$
+x=\begin{bmatrix}
+2 \\
+1 \\
+0
+\end{bmatrix},\quad
+W=\begin{bmatrix}
+1&0&2 \\
+-1&3&1
+\end{bmatrix},\quad
+b=\begin{bmatrix}
+1 \\
+-2
+\end{bmatrix}
+$$
 
 First,
 
-$$Wx=\begin{bmatrix}2\\1\end{bmatrix}$$
+$$
+Wx=\begin{bmatrix}
+2 \\
+1
+\end{bmatrix}
+$$
 
 Then,
 
-$$z=Wx+b=\begin{bmatrix}3\\-1\end{bmatrix}$$
+$$
+z=Wx+b=\begin{bmatrix}
+3 \\
+-1
+\end{bmatrix}
+$$
 
 Define ReLU componentwise by
 
@@ -217,7 +287,12 @@ $$\mathrm{ReLU}(z_i)=\max(0,z_i)$$
 
 so
 
-$$\mathrm{ReLU}(z)=\begin{bmatrix}3\\0\end{bmatrix}$$
+$$
+\mathrm{ReLU}(z)=\begin{bmatrix}
+3 \\
+0
+\end{bmatrix}
+$$
 
 The mechanism is: **weighted sums → bias shift → nonlinear transformation**.
 
