@@ -27,7 +27,7 @@ Probability appears when we model distributions or likelihoods. Optimization app
 
 A probability measure assigns numbers between 0 and 1 to events.
 
-$$0\le P(A)\le1.$$
+$$0\le P(A)\le1$$
 
 The probability of the entire sample space is 1. For disjoint events,
 
@@ -81,8 +81,6 @@ $$P(X=x)=0.$$
 
 Yet $f_X(x)$ can be positive, and a density can even exceed 1. What matters is the area under the density curve.
 
-This distinction becomes important later when reading probability models and loss functions.
-
 ---
 
 ## 4. Expectation: the average implied by a distribution
@@ -117,35 +115,40 @@ That fact is useful because many ML quantities are sums or averages of random co
 
 ## 5. Variance: measuring spread
 
-Variance is
+Variance is the expected squared deviation from the mean:
 
-$$\operatorname{Var}(X)=E[(X-E[X])^2].$$
+$$\mathrm{Var}(X)=E[(X-E[X])^2].$$
 
-It measures expected squared deviation from the mean. Standard deviation is
+It measures how far values tend to lie from the mean, with larger deviations receiving more weight because they are squared.
 
-$$\sigma=\sqrt{\operatorname{Var}(X)}.$$
+Standard deviation is the square root of variance:
+
+$$\sigma=\sqrt{\mathrm{Var}(X)}.$$
 
 ### Why square the deviation?
 
-If we simply averaged $X-E[X]$, positive and negative deviations would cancel. Squaring makes all deviations nonnegative and emphasizes larger deviations.
+If we averaged the signed deviation $X-E[X]$, positive and negative deviations would cancel. Squaring makes every deviation nonnegative and gives disproportionately more weight to large deviations.
 
 ### Derive the useful identity
 
-Let $\mu=E[X]$:
+Let $\mu=E[X]$.
+
+Start from the definition:
 
 $$\begin{aligned}
-\operatorname{Var}(X)
+\mathrm{Var}(X)
 &=E[(X-\mu)^2]\\
 &=E[X^2-2\mu X+\mu^2]\\
 &=E[X^2]-2\mu E[X]+\mu^2\\
+&=E[X^2]-2\mu^2+\mu^2\\
 &=E[X^2]-\mu^2.
 \end{aligned}$$
 
-Therefore,
+Since $\mu=E[X]$,
 
-$$\operatorname{Var}(X)=E[X^2]-(E[X])^2.$$
+$$\mathrm{Var}(X)=E[X^2]-(E[X])^2.$$
 
-This identity appears frequently in statistics and ML.
+The point is to understand the derivation, not merely memorize the shortcut.
 
 ---
 
@@ -185,7 +188,7 @@ Bayes' rule separates three ideas:
 - $P(B\mid A)$ = how expected the evidence is if $A$ is true;
 - $P(A\mid B)$ = updated belief after seeing evidence $B$.
 
-The denominator $P(B)$ normalizes the result so the resulting probabilities are valid.
+The denominator $P(B)$ normalizes the result so the resulting probability is valid.
 
 Do not reduce Bayes' rule to "reverse the conditional probability." It is not generally true that $P(A\mid B)=P(B\mid A)$.
 
@@ -201,7 +204,7 @@ If $P(B)>0$, this is equivalent to
 
 $$P(A\mid B)=P(A).$$
 
-Intuitively, learning $B$ happened does not change the probability of $A$.
+Intuitively, learning that $B$ happened does not change the probability of $A$.
 
 For random variables, independence means their joint distribution factorizes. In the discrete case:
 
@@ -387,7 +390,7 @@ A neural network is a composition of many functions. We need gradients of the fi
 
 These are different jobs.
 
-For example, Adam and SGD are optimization algorithms; backpropagation is the gradient-computation procedure.
+For example, SGD and Adam are optimization algorithms; backpropagation is the gradient-computation procedure.
 
 This distinction becomes extremely important when debugging training. A wrong gradient and a bad optimizer setting are different failure modes.
 
@@ -431,10 +434,10 @@ No. It is a weighted average and may be unattainable.
 No. The prior and normalization term matter.
 
 **The gradient points downhill.**  
-No. The gradient points toward greatest local increase; the negative gradient is a descent direction.
+No. The gradient points toward greatest local increase; the negative gradient is the descent direction.
 
 **Gradient descent always decreases loss.**  
-No. The guarantee is local and depends on step size and assumptions.
+No. The argument is local and depends on step size and assumptions.
 
 **Backpropagation is the optimizer.**  
 No. Backpropagation computes gradients; the optimizer updates parameters.
@@ -442,8 +445,8 @@ No. Backpropagation computes gradients; the optimizer updates parameters.
 **Training loss equals generalization.**  
 No. A model can fit training data well while performing poorly on unseen data.
 
-**Randomness means the model is broken.**  
-No. Sampling and stochastic optimization intentionally use randomness in many systems.
+**A smaller finite-difference step is always better.**  
+No. Floating-point rounding and cancellation eventually matter.
 
 ---
 
@@ -455,7 +458,7 @@ Create `experiments/foundations/math02_probability_optimization.py`.
 
 ### Experiment A — probability distribution
 
-Represent a fair die as a PMF. Verify the probabilities sum to 1 and compute the expectation and variance from definitions.
+Represent a fair die as a PMF. Verify the probabilities sum to 1 and compute expectation and variance from definitions.
 
 ### Experiment B — finite differences
 
@@ -475,58 +478,68 @@ Reproduce the same derivative using PyTorch autograd. Compare the result against
 
 The point is not to learn the PyTorch API yet. The point is to verify that automatic differentiation produces the mathematical gradient you expect.
 
+### Required prediction before execution
+
+Predict what should happen before running the code:
+
+- small learning rate;
+- moderate learning rate;
+- excessive learning rate;
+- starting on either side of the minimum.
+
+Then compare predictions with observations.
+
 ---
 
 ## 18. Exercises
 
-1. Compute the expectation of a fair die.
-2. Derive $\operatorname{Var}(X)=E[X^2]-(E[X])^2$.
-3. Explain why a density can exceed 1 while a probability cannot.
-4. Derive Bayes' rule from the product rule.
-5. Explain independence using both $P(A\cap B)$ and $P(A\mid B)$.
-6. For $f(w)=(w-3)^2$, calculate the gradient at $w=0$, $w=2$ and $w=4$.
-7. Explain why gradient descent subtracts the gradient.
-8. Explain the difference between backpropagation and an optimizer.
-9. Explain why a mini-batch gradient is an estimate rather than necessarily the exact full-dataset gradient.
-10. Predict what happens when the learning rate is made 100× larger in the toy problem, then test your prediction.
+1. A random variable takes values 0 and 1 with probabilities 0.7 and 0.3. Compute expectation and variance.
+2. Explain why $E[X+Y]=E[X]+E[Y]$ does not require independence.
+3. Derive Bayes' rule from conditional probability.
+4. Give an example where a density value exceeds 1 without violating probability axioms.
+5. For $f(w)=(w-4)^2$, derive the gradient-descent update.
+6. Explain why a finite-difference derivative is an approximation.
+7. Explain the difference between a gradient and an optimizer.
+8. Explain why a mini-batch gradient can be useful but noisy.
+9. Given training loss decreasing while validation loss increases, what phenomenon might you suspect and what experiment would you run next?
 
 ---
 
 ## 19. Questions you must be able to answer
 
-- What does a probability distribution represent?
+- What is a random variable?
 - What is the difference between PMF and PDF?
-- Why is a density not a probability?
-- What does expectation mean if its value cannot occur?
-- Why do we square deviations for variance?
-- What exactly does conditional probability mean?
-- How is Bayes' rule derived?
-- What does a derivative tell us?
-- What does a gradient tell us?
-- Why does the negative gradient give a descent direction?
+- Why is a PDF value not itself a probability?
+- What does expectation mean?
+- Why can the expected value be impossible as an observed outcome?
+- What does variance measure?
+- Why is variance based on squared deviation?
+- Does linearity of expectation require independence?
+- What does $P(A\mid B)$ mean?
+- Derive Bayes' rule.
+- What is a loss function?
+- What is a gradient?
+- Why does gradient descent subtract the gradient?
 - What does the learning rate control?
-- Why can gradient descent fail to reduce loss?
-- What does backpropagation compute?
-- What does the optimizer do with the gradient?
-- Why use mini-batches?
-
----
+- Why does a mini-batch gradient differ from the full-dataset gradient?
+- What exactly does backpropagation compute?
+- What exactly does an optimizer do?
 
 ## 20. Acceptance criteria
 
-Pass only when you can derive Bayes' rule and the variance identity, explain PMF vs PDF without hand-waving, compute a derivative and gradient, explain the gradient-descent update from the Taylor approximation, distinguish backpropagation from optimization, and reproduce the toy optimization experiment with evidence.
+The lesson passes when you can calculate expectation and variance for simple distributions, explain PMF versus PDF, derive Bayes' rule and the variance identity, explain gradient descent from the first-order approximation, numerically verify a derivative, demonstrate stable and unstable learning-rate behavior, and distinguish loss, gradients, backpropagation and optimization.
 
-**Evidence:** NumPy experiment, analytical calculations, finite-difference comparison, learning-rate experiment and optional PyTorch gradient verification.
+**Required evidence:** reproducible Python experiment, hand derivations, numerical derivative comparison, gradient-descent plots, and a short interpretation of observations.
 
 ## References and proof sources
 
-1. Goodfellow, Bengio & Courville, *Deep Learning*, Chapter 3, **Probability and Information Theory**.  
-   https://www.deeplearningbook.org/contents/prob.html
-2. Stanford CS229, supplementary **Probability Theory Review** and **Convex Optimization** materials.  
-   https://cs229.stanford.edu/materials.html-withcomments
-3. Stanford CS229 syllabus/materials, including probability and convex-optimization review.  
-   https://cs229.stanford.edu/syllabus-new.html
-4. PyTorch documentation, **Autograd mechanics**, for the later implementation experiment. It documents reverse automatic differentiation and gradient computation through the recorded computational graph.  
-   https://docs.pytorch.org/docs/stable/notes/autograd.html
+1. Ian Goodfellow, Yoshua Bengio, Aaron Courville, *Deep Learning*, Chapter 3 (Probability and Information Theory) and Chapter 4 (Numerical Computation). MIT Press.  
+   https://www.deeplearningbook.org/
+2. Stanford CS229, course materials on probability, supervised learning and optimization.  
+   https://cs229.stanford.edu/
+3. MIT OpenCourseWare, Gilbert Strang's linear algebra and related mathematical materials.  
+   https://ocw.mit.edu/
+4. GitHub Docs, *Writing mathematical expressions*. GitHub documents `$...$`, `$$...$$`, and ` ```math ` syntax for mathematical expressions in Markdown.  
+   https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/writing-mathematical-expressions
 
-**Proofs:** Bayes' rule is derived from the two equivalent factorizations of $P(A\cap B)$; the variance identity is derived by expansion; the gradient-descent sign follows from the first-order Taylor approximation. These derivations are shown in the lesson rather than presented as unsupported formulas.
+**Proof/derivation note:** Bayes' rule follows algebraically from the definition of conditional probability. The variance identity follows by expanding $(X-\mu)^2$ and applying linearity of expectation. The gradient-descent direction follows from the first-order Taylor approximation and the Euclidean inner product.
