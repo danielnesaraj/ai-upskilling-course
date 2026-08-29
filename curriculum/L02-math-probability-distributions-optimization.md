@@ -1,657 +1,527 @@
-# L02 — Math 2: Probability, Distributions & Optimization Intuition
+# L02 — Foundations: Probability, Distributions & Optimization
 
 **Phase:** Foundations  
-**Week:** 1  
 **Sequence:** 2  
-**Estimated effort:** 2.5 hours
+**Estimated effort:** 2.5–3 hours
 
 ## Purpose
 
-ML systems operate under uncertainty and are trained by optimizing numerical objectives. This lesson establishes the probability and optimization vocabulary needed to understand loss functions, likelihood, sampling, gradients, and later LLM training/inference.
+ML systems represent uncertainty and optimize numerical objectives. This lesson builds the probability, calculus and optimization vocabulary needed later for loss functions, likelihood, sampling, gradients, backpropagation and LLM training.
 
-The goal is **engineering fluency**, not a full probability or calculus course.
+This is not a complete probability or calculus course. It is the minimum foundation needed to reason about AI systems rather than merely call training APIs.
 
 ## Objectives
 
-By the end, you should be able to:
+You should be able to:
 
-- distinguish probability, random variables, distributions, samples, parameters, and observations;
-- calculate expectation and variance for simple discrete random variables;
-- understand conditional probability and Bayes' rule;
-- distinguish probability mass functions from probability density functions;
-- understand why a continuous density value is not itself a probability;
-- explain a loss function as an objective over model predictions;
-- understand derivatives and gradients as local sensitivity information;
-- explain gradient descent and learning rate;
-- numerically estimate a derivative with finite differences;
-- connect probability and optimization to ML training and inference.
+- distinguish probability, random variables, distributions, samples and observations;
+- distinguish PMFs from PDFs;
+- calculate expectation and variance for simple discrete variables;
+- derive conditional probability and Bayes' rule;
+- understand derivatives and gradients as local sensitivity;
+- explain why gradient descent subtracts the gradient;
+- numerically estimate a derivative;
+- distinguish gradients, backpropagation, loss functions and optimizers;
+- explain why mini-batch gradients are useful estimates rather than exact full-dataset gradients.
 
-## Prerequisites
+## 1. Probability: representing uncertainty
 
-L01: vectors, matrices, functions, and basic algebra.
+Probability is a mathematical measure used to represent uncertainty about events or quantities.
 
----
+For an event $A$:
 
-## 1. Probability as a model of uncertainty
+$$0\le P(A)\le1$$
 
-Probability provides a mathematical way to represent uncertainty about outcomes of a random process or uncertain quantities.
+For mutually exclusive events $A$ and $B$:
 
-For an event \(A\),
+$$P(A\cup B)=P(A)+P(B)$$
 
-\[
-0\le P(A)\le1.
-\]
+For any event:
 
-For mutually exclusive events \(A\) and \(B\),
+$$P(A^c)=1-P(A)$$
 
-\[
-P(A\cup B)=P(A)+P(B).
-\]
-
-For any event,
-
-\[
-P(A^c)=1-P(A).
-\]
-
-These are properties of probability measures, not empirical guarantees about any particular finite dataset.
+These are properties of the probability model. They are not statements that a finite sample must exactly match the probabilities.
 
 ### Random variable
 
-A random variable maps outcomes of a random experiment to numerical values. It is **not necessarily random in the sense of changing every time you look at it**; the randomness is part of the probabilistic model.
+A random variable maps outcomes of an underlying experiment or uncertain process to numerical values. The word "random" refers to the probabilistic model, not necessarily to a value changing every time it is inspected.
 
-For example, if a model represents whether a request succeeds, a Bernoulli random variable \(X\) can take values 1 or 0.
+For example, let $X=1$ mean a request succeeds and $X=0$ mean it fails. Then $X$ is a Bernoulli random variable.
 
 ---
 
 ## 2. Distributions
 
-A probability distribution describes how probability is assigned to possible values of a random variable.
+A probability distribution specifies how probability is assigned across possible values of a random variable.
 
 ### Discrete: PMF
 
-For a discrete random variable, a probability mass function (PMF) gives
+For a discrete variable, the probability mass function is
 
-\[
-p_X(x)=P(X=x).
-\]
+$$p_X(x)=P(X=x)$$
 
-The probabilities sum to one:
+and
 
-\[
-\sum_x p_X(x)=1.
-\]
+$$\sum_x p_X(x)=1$$
 
-Example: a fair six-sided die has
+For a fair die:
 
-\[
-P(X=k)=\frac16,\quad k\in\{1,2,3,4,5,6\}.
-\]
+$$P(X=k)=\frac{1}{6},\qquad k\in\{1,2,3,4,5,6\}$$
 
 ### Continuous: PDF
 
-A continuous random variable can be described by a probability density function (PDF) \(f_X(x)\). Probabilities are obtained by integrating density over an interval:
+A continuous random variable can be described by a probability density function $f_X(x)$. Probability comes from integrating density over an interval:
 
-\[
-P(a\le X\le b)=\int_a^b f_X(x)\,dx.
-\]
+$$P(a\le X\le b)=\int_a^b f_X(x)\,dx$$
 
-For a continuous variable,
+For a standard continuous distribution,
 
-\[
-P(X=x)=0
-\]
+$$P(X=x)=0$$
 
-for an individual point under the usual continuous-distribution model, even though the density at \(x\) may be positive.
+for any single point, even though $f_X(x)$ may be positive.
 
-**Critical distinction:** a PDF value is a density, not a probability. It can exceed 1 when the density is concentrated over a sufficiently small interval.
+**Critical distinction:** $f_X(x)$ is a density, not a probability. A density can exceed 1; the integral over the relevant domain must still equal 1.
 
 ---
 
-## 3. Expectation: the average implied by a distribution
+## 3. Expectation: the distribution's weighted average
 
-For a discrete random variable,
+For a discrete variable:
 
-\[
-E[X]=\sum_x xP(X=x).
-\]
+$$E[X]=\sum_x xP(X=x)$$
 
-For a continuous random variable,
+For a continuous variable, when the expectation exists:
 
-\[
-E[X]=\int x f_X(x)\,dx
-\]
+$$E[X]=\int x f_X(x)\,dx$$
 
-when the expectation exists.
+Think of expectation as the average implied by the entire distribution.
 
-Expectation is a weighted average over the distribution.
+For a fair die:
 
-### Example
+$$E[X]=\frac{1+2+3+4+5+6}{6}=3.5$$
 
-For a fair die,
-
-\[
-E[X]=\frac{1+2+3+4+5+6}{6}=3.5.
-\]
-
-This does **not** mean a die roll can produce 3.5. It means 3.5 is the long-run average under the model.
+A die never produces 3.5. The expected value is a weighted average, not necessarily an attainable outcome.
 
 ### Linearity of expectation
 
-For random variables with defined expectations,
+For random variables with defined expectations:
 
-\[
-E[aX+bY+c]=aE[X]+bE[Y]+c.
-\]
+$$E[aX+bY+c]=aE[X]+bE[Y]+c$$
 
-Importantly, this does **not** require \(X\) and \(Y\) to be independent.
+No independence assumption is required.
 
 ---
 
-## 4. Variance: how spread out a variable is
+## 4. Variance: expected squared deviation
 
-Variance is
+Variance measures the expected squared distance from the mean:
 
-\[
-\operatorname{Var}(X)=E[(X-E[X])^2].
-\]
+$$\mathrm{Var}(X)=E[(X-E[X])^2]$$
 
-It measures expected squared deviation from the mean.
+Standard deviation is
 
-The standard deviation is
+$$\sigma_X=\sqrt{\mathrm{Var}(X)}$$
 
-\[
-\sigma_X=\sqrt{\operatorname{Var}(X)}.
-\]
+A useful identity is
 
-### Useful identity
+$$\mathrm{Var}(X)=E[X^2]-(E[X])^2$$
 
-\[
-\operatorname{Var}(X)=E[X^2]-(E[X])^2.
-\]
+### Derivation
 
-#### Derivation
+Let $\mu=E[X]$:
 
-Let \(\mu=E[X]\). Then
-
-\[
-\begin{aligned}
-\operatorname{Var}(X)
+$$\begin{aligned}\mathrm{Var}(X)
 &=E[(X-\mu)^2]\\
 &=E[X^2-2\mu X+\mu^2]\\
 &=E[X^2]-2\mu E[X]+\mu^2\\
 &=E[X^2]-2\mu^2+\mu^2\\
-&=E[X^2]-\mu^2.
-\end{aligned}
-\]
+&=E[X^2]-\mu^2
+\end{aligned}$$
 
-This identity is worth being able to derive because it appears in statistics, optimization, normalization, and ML analysis.
+The important skill is not memorizing the shortcut; it is being able to derive it.
 
 ---
 
-## 5. Conditional probability
+## 5. Conditional probability and Bayes' rule
 
-Conditional probability asks: **what is the probability of A given that B is known to have occurred?**
+Conditional probability asks: **what is the probability of $A$ given that $B$ is known?**
 
-For \(P(B)>0\),
+For $P(B)>0$:
 
-\[
-P(A\mid B)=\frac{P(A\cap B)}{P(B)}.
-\]
+$$P(A\mid B)=\frac{P(A\cap B)}{P(B)}$$
 
-Rearranging gives the product rule:
+Rearrange:
 
-\[
-P(A\cap B)=P(A\mid B)P(B).
-\]
+$$P(A\cap B)=P(A\mid B)P(B)$$
 
-Similarly,
+The same intersection can be written the other way:
 
-\[
-P(A\cap B)=P(B\mid A)P(A).
-\]
+$$P(A\cap B)=P(B\mid A)P(A)$$
 
-Equating these produces Bayes' rule:
+Equating them gives Bayes' rule:
 
-\[
-P(A\mid B)=\frac{P(B\mid A)P(A)}{P(B)}.
-\]
+$$P(A\mid B)=\frac{P(B\mid A)P(A)}{P(B)}$$
+
+The formula says that the updated probability depends on three things: the likelihood $P(B\mid A)$, the prior $P(A)$, and the normalizing evidence $P(B)$.
 
 ### Why this matters in AI
 
-Many ML problems can be expressed probabilistically. For example, a classifier may model or approximate
+Many ML systems model conditional quantities such as
 
-\[
-P(Y\mid X=x),
-\]
+$$P(Y\mid X=x)$$
 
-rather than directly producing an unqualified statement of certainty.
-
-Do not automatically interpret every model output as a calibrated probability. Whether an output is probabilistically meaningful depends on the model, training objective, output parameterization, and calibration.
+A model output should not automatically be treated as a calibrated probability. That interpretation depends on the model's output parameterization, training objective and calibration behavior.
 
 ---
 
 ## 6. Independence
 
-Two events are independent if
+Two events are independent when
 
-\[
-P(A\cap B)=P(A)P(B).
-\]
+$$P(A\cap B)=P(A)P(B)$$
 
-When \(P(B)>0\), this is equivalent to
+For $P(B)>0$, this is equivalent to
 
-\[
-P(A\mid B)=P(A).
-\]
+$$P(A\mid B)=P(A)$$
 
-Independence is a strong assumption. It should not be confused with events merely being unrelated in ordinary language.
+For two discrete random variables, independence means
 
-For random variables, independence means their joint distribution factorizes appropriately; for two variables,
+$$p(x,y)=p(x)p(y)$$
 
-\[
-p(x,y)=p(x)p(y)
-\]
-
-in the discrete case, with analogous factorization for continuous distributions.
+Independence is a mathematical assumption, not a synonym for "these things seem unrelated."
 
 ---
 
-## 7. Loss functions: turning error into a number
+## 7. Loss functions: turning behavior into an objective
 
-An ML model often has parameters \(\theta\) and produces predictions
+A parameterized model produces
 
-\[
-\hat y=f_\theta(x).
-\]
+$$\hat y=f_\theta(x)$$
 
-A loss function measures error for an example:
+A per-example loss measures discrepancy between prediction and target:
 
-\[
-\ell(\hat y,y).
-\]
+$$\ell(\hat y,y)$$
 
-A training objective commonly aggregates losses over a dataset:
+A common dataset objective is
 
-\[
-J(\theta)=\frac{1}{N}\sum_{i=1}^{N}\ell(f_\theta(x_i),y_i).
-\]
+$$J(\theta)=\frac{1}{N}\sum_{i=1}^{N}\ell(f_\theta(x_i),y_i)$$
 
-Training then seeks parameters that make the objective small, subject to the chosen optimization procedure and any regularization or constraints.
+Training attempts to find parameters that make the chosen objective good under the chosen optimization procedure and constraints.
 
-The exact objective matters. "The model learns" is not a mechanism; the optimization objective and update procedure are part of the mechanism.
+This is an important conceptual correction: **"the model learns" is not a mechanism.** The model computes a function, the loss defines an objective, differentiation provides gradient information, and an optimizer changes parameters.
 
 ### Loss versus metric
 
-A **loss** is an objective used by a training procedure; a **metric** is a measure used to assess behavior. They can be the same quantity, but they do not have to be.
+A loss is an objective used during a training procedure. A metric is a measure used to assess behavior. They may be the same quantity, but they need not be.
 
-For example, a classifier might be trained with cross-entropy while reported with accuracy, precision, recall, or another metric.
+A classifier, for example, could train using cross-entropy while being evaluated with accuracy or another metric.
 
 ---
 
-## 8. Derivatives: local sensitivity
+## 8. Derivatives: local change
 
-For a scalar function \(f(x)\), the derivative at \(x\) is
+For a scalar function $f(x)$, the derivative is
 
-\[
-f'(x)=\lim_{h\to0}\frac{f(x+h)-f(x)}{h},
-\]
+$$f'(x)=\lim_{h\to0}\frac{f(x+h)-f(x)}{h}$$
 
 when the limit exists.
 
-Intuitively, it describes the local rate at which the output changes as the input changes.
+It measures the local rate at which the output changes as the input changes.
 
-For example,
+For
 
-\[
-f(x)=x^2 \Rightarrow f'(x)=2x.
-\]
+$$f(x)=x^2$$
 
-At \(x=3\), the derivative is 6.
+we have
 
-### Finite-difference approximation
+$$f'(x)=2x$$
 
-For small \(h\),
+so at $x=3$, the derivative is 6.
 
-\[
-f'(x)\approx\frac{f(x+h)-f(x)}{h}.
-\]
+### Finite differences
 
-A more accurate symmetric approximation is
+A forward finite difference approximates the derivative:
 
-\[
-f'(x)\approx\frac{f(x+h)-f(x-h)}{2h}.
-\]
+$$f'(x)\approx\frac{f(x+h)-f(x)}{h}$$
 
-These are numerical approximations, not exact derivatives.
+A central finite difference is generally more accurate for sufficiently small $h$:
+
+$$f'(x)\approx\frac{f(x+h)-f(x-h)}{2h}$$
+
+These are numerical approximations. Making $h$ smaller does not indefinitely improve floating-point calculations because rounding and cancellation eventually matter.
 
 ---
 
 ## 9. Gradients
 
-For a scalar-valued function of multiple variables,
+For a scalar-valued function
 
-\[
-f:\mathbb{R}^n\rightarrow\mathbb{R},
-\]
+$$f:\mathbb{R}^n\rightarrow\mathbb{R}$$
 
-the gradient is
+the gradient is the vector of partial derivatives:
 
-\[
-\nabla f(x)=
-\begin{bmatrix}
-\frac{\partial f}{\partial x_1}\\
-\vdots\\
-\frac{\partial f}{\partial x_n}
-\end{bmatrix}.
-\]
+$$\nabla f(x)=\begin{bmatrix}\frac{\partial f}{\partial x_1}\\\vdots\\\frac{\partial f}{\partial x_n}\end{bmatrix}$$
 
-The gradient points in the direction of greatest local increase of a differentiable scalar function under the standard Euclidean inner product. Therefore \(-\nabla f\) is a local descent direction when the gradient is nonzero.
+Under the ordinary Euclidean inner product, the gradient gives the direction of greatest local increase for a differentiable scalar function. Therefore the negative gradient is a local descent direction.
 
-This gives the core idea behind gradient descent.
+This is the mathematical basis of gradient descent.
 
 ---
 
 ## 10. Gradient descent
 
-Given objective \(J(\theta)\), the basic gradient-descent update is
+Given objective $J(\theta)$, basic gradient descent uses
 
-\[
-\theta_{t+1}=\theta_t-\eta\nabla J(\theta_t),
-\]
+$$\theta_{t+1}=\theta_t-\eta\nabla J(\theta_t)$$
 
-where \(\eta>0\) is the learning rate.
+where $\eta>0$ is the learning rate.
 
 ### Why subtract?
 
 A first-order Taylor approximation gives
 
-\[
-J(\theta+\Delta)\approx J(\theta)+\nabla J(\theta)^T\Delta.
-\]
+$$J(\theta+\Delta)\approx J(\theta)+\nabla J(\theta)^T\Delta$$
 
 Choose
 
-\[
-\Delta=-\eta\nabla J(\theta).
-\]
+$$\Delta=-\eta\nabla J(\theta)$$
 
 Then
 
-\[
-J(\theta+\Delta)\approx J(\theta)-\eta\|\nabla J(\theta)\|^2.
-\]
+$$J(\theta+\Delta)\approx J(\theta)-\eta\lVert\nabla J(\theta)\rVert_2^2$$
 
-For sufficiently small positive \(\eta\), this predicts a decrease in the objective locally whenever the gradient is nonzero.
+The change is negative in this approximation when $\eta>0$ and the gradient is nonzero.
 
-This is a **local approximation**, not a guarantee that every update decreases the true objective. Large learning rates, nonconvex objectives, numerical issues, and other factors can cause increases or instability.
+This is a **local first-order argument**, not a universal guarantee that every actual update reduces the objective. Learning rate, curvature, numerical effects and nonconvexity all matter.
 
-### Learning rate intuition
+### Learning-rate intuition
 
-- Too small: updates can be slow.
-- Reasonably chosen: progress can be efficient.
-- Too large: updates can overshoot or become unstable.
+- Too small: progress can be unnecessarily slow.
+- Appropriate: progress can be efficient.
+- Too large: updates can overshoot, oscillate or diverge.
 
 There is no universal correct learning rate.
 
 ---
 
-## 11. Why this becomes ML training
+## 11. From calculus to ML training
 
-For a model with millions or billions of parameters, we cannot manually choose each parameter. Instead:
+For a model with many parameters:
 
-1. parameters define a function;
-2. the function produces predictions;
-3. a loss/objective measures error;
-4. differentiation tells us how the objective changes with parameters;
+1. parameters determine a function;
+2. the function produces outputs;
+3. the loss turns behavior into a scalar objective;
+4. differentiation tells us how that objective changes with parameters;
 5. an optimizer uses gradient information to update parameters;
-6. repeated updates produce a trained parameter set.
+6. repeated updates produce a new parameter set.
 
-Backpropagation, introduced later, is an efficient application of the chain rule for computing gradients through compositions of functions.
+### Backpropagation is not the optimizer
 
-An optimizer is not the same thing as backpropagation:
+Backpropagation is an efficient application of the chain rule for computing gradients through a composition of functions.
 
-- **backpropagation** computes gradients efficiently;
-- **the optimizer** decides how to use those gradients to update parameters.
+An optimizer takes gradient information and decides how to update parameters.
 
-This distinction becomes important in neural-network debugging.
+This distinction matters when debugging training:
 
----
-
-## 12. Batch, stochastic and mini-batch intuition
-
-The full-dataset objective may be
-
-\[
-J(\theta)=\frac1N\sum_{i=1}^N \ell_i(\theta).
-\]
-
-Computing its exact gradient can be expensive for large datasets.
-
-A mini-batch uses a subset \(B\):
-
-\[
-J_B(\theta)=\frac1{|B|}\sum_{i\in B}\ell_i(\theta).
-\]
-
-Its gradient is an estimate of the full-dataset gradient under appropriate sampling assumptions.
-
-This creates a tradeoff:
-
-- larger batches usually give a less noisy estimate per update but require more computation/memory per update;
-- smaller batches provide cheaper, noisier updates and may require more updates.
-
-Do not reduce this to "SGD is always faster" or "bigger batches are always better." The practical result depends on hardware, data, optimizer, learning-rate schedule, model, and workload.
+- wrong gradient → investigate the computation graph/backpropagation or derivative implementation;
+- sensible gradient but bad updates → investigate optimizer, learning rate, scaling, etc.;
+- sensible training but poor validation behavior → investigate data, objective, regularization or generalization.
 
 ---
 
-## 13. A simple optimization example
+## 12. Full-batch and mini-batch gradients
+
+A full dataset objective might be
+
+$$J(\theta)=\frac{1}{N}\sum_{i=1}^{N}\ell_i(\theta)$$
+
+and its exact gradient is
+
+$$\nabla J(\theta)=\frac{1}{N}\sum_{i=1}^{N}\nabla\ell_i(\theta)$$
+
+A mini-batch $B$ uses
+
+$$J_B(\theta)=\frac{1}{|B|}\sum_{i\in B}\ell_i(\theta)$$
+
+The mini-batch gradient is generally an estimate of the full-dataset gradient. Under suitable random sampling assumptions, it can be an unbiased estimator; its variance depends on the sampling and data.
+
+This creates a practical tradeoff:
+
+- larger batches generally reduce gradient noise per update but require more memory and computation per update;
+- smaller batches are cheaper per update and noisier.
+
+Do not reduce this to "SGD is always faster" or "larger batches are always better." The result depends on hardware, model, optimizer, data and workload.
+
+---
+
+## 13. Worked optimization example
 
 Consider
 
-\[
-f(w)=(w-3)^2.
-\]
+$$f(w)=(w-3)^2$$
 
-Its derivative is
+Then
 
-\[
-f'(w)=2(w-3).
-\]
+$$f'(w)=2(w-3)$$
 
-Gradient descent gives
+and gradient descent becomes
 
-\[
-w_{t+1}=w_t-\eta\,2(w_t-3).
-\]
+$$w_{t+1}=w_t-2\eta(w_t-3)$$
 
-With \(w_0=0\) and \(\eta=0.1\):
+With $w_0=0$ and $\eta=0.1$:
 
-\[
-w_1=0.6,
-\]
+$$w_1=0.6$$
 
 then
 
-\[
-w_2=1.08,
-\]
+$$w_2=1.08$$
 
-and the sequence moves toward the minimum at \(w=3\).
+The sequence moves toward the minimum at $w=3$.
 
-This toy problem is deliberately simple. The point is to make the update mechanics visible before introducing neural networks.
+The point of this example is not that real neural-network optimization is this simple. It is to make the update mechanics visible before introducing high-dimensional parameter spaces.
 
 ---
 
-## 14. Derivations / proofs worth knowing
+## 14. Proofs and derivations
 
-### 14.1 Bayes' rule
+### Bayes' rule
 
-Start with the product rule:
+Start with
 
-\[
-P(A\cap B)=P(A\mid B)P(B).
-\]
+$$P(A\cap B)=P(A\mid B)P(B)$$
 
-Also,
+and
 
-\[
-P(A\cap B)=P(B\mid A)P(A).
-\]
+$$P(A\cap B)=P(B\mid A)P(A)$$
 
-Therefore,
+Equate them and divide by $P(B)>0$:
 
-\[
-P(A\mid B)P(B)=P(B\mid A)P(A).
-\]
+$$P(A\mid B)=\frac{P(B\mid A)P(A)}{P(B)}$$
 
-Divide by \(P(B)>0\):
+### Variance identity
 
-\[
-P(A\mid B)=\frac{P(B\mid A)P(A)}{P(B)}.
-\]
+The expansion in Section 4 proves
 
-### 14.2 Variance identity
+$$\mathrm{Var}(X)=E[X^2]-(E[X])^2$$
 
-Derived in Section 4:
+### Gradient-descent direction
 
-\[
-\operatorname{Var}(X)=E[X^2]-(E[X])^2.
-\]
+From
 
-You should be able to reproduce the expansion.
+$$f(x+\Delta)\approx f(x)+\nabla f(x)^T\Delta$$
 
-### 14.3 Gradient descent direction
+the change is controlled by the inner product $\nabla f(x)^T\Delta$. For a fixed Euclidean step length, the most negative value occurs when $\Delta$ points opposite the gradient. Hence $-\nabla f$ is a steepest-descent direction.
 
-From the first-order approximation,
-
-\[
-f(x+\Delta)\approx f(x)+\nabla f(x)^T\Delta.
-\]
-
-For a fixed step length \(\|\Delta\|\), the inner product is minimized by choosing \(\Delta\) opposite the gradient. Thus \(-\nabla f\) is a steepest-descent direction under the Euclidean norm.
-
-This explains the sign of the gradient-descent update; it is not merely a memorized rule.
+The derivation explains the sign in the update rather than asking you to memorize it.
 
 ---
 
 ## 15. Common misconceptions
 
-- **"Probability and frequency are identical."** Probability is a model/measure; observed frequency is data. Frequencies can estimate probabilities under suitable assumptions and increasing data, but they are not definitionally identical.
-- **"A PDF value is a probability."** It is a density. Integrate over a region to obtain probability.
-- **"Expected value is a value you should expect to observe."** It is a weighted average; it may not be an attainable outcome.
-- **"Bayes' rule says reverse the probability."** No. It includes the prior and normalization term.
-- **"A gradient points downhill."** The gradient points toward greatest local increase; the negative gradient is the local descent direction.
-- **"Gradient descent guarantees lower loss after every step."** No. The local approximation supports small enough steps under suitable differentiability conditions; practical training can increase loss.
-- **"Backpropagation is the optimizer."** No. Backpropagation computes gradients; optimizers use gradients to update parameters.
-- **"Training loss is the same as generalization."** No. A model can fit training data well and still perform poorly on unseen data.
-- **"Randomness means the model is broken."** Not necessarily. Sampling and stochastic optimization intentionally introduce randomness in many systems.
-- **"Temperature is the same thing as model uncertainty."** No. In generative-model inference, temperature modifies sampling/logit scaling; it is not a general-purpose measure of epistemic or aleatoric uncertainty.
+- **Probability and frequency are identical.** No. Probability is part of a model; frequency is observed data.
+- **A PDF value is a probability.** No. It is a density; integrate it over an interval to obtain probability.
+- **Expected value is necessarily an observable value.** No.
+- **Bayes' rule simply reverses a probability.** No. It includes the prior and evidence terms.
+- **The gradient points downhill.** No. The gradient points toward greatest local increase; the negative gradient is the descent direction.
+- **Gradient descent guarantees lower loss after every update.** No.
+- **Backpropagation is an optimizer.** No. It computes gradients; an optimizer uses them.
+- **Training loss equals generalization performance.** No.
+- **A smaller finite-difference step is always better.** No; floating-point error eventually matters.
+- **Temperature is a general uncertainty measure.** No. In generative-model sampling, temperature modifies the sampling distribution/logit scaling; it is not by itself a measure of epistemic or aleatoric uncertainty.
 
 ---
 
-## 16. Implementation / experiment
+## 16. Experiment
 
-Use Python + NumPy + Matplotlib. Do not use an ML framework yet.
+Use **Python + NumPy + Matplotlib**. Do not use an ML framework yet.
 
-Create `experiments/foundations/math02_probability_optimization.py` or an equivalent notebook that:
+Create `experiments/foundations/math02_probability_optimization.py`.
 
-1. defines a small discrete distribution and verifies probabilities sum to 1;
-2. computes expectation and variance manually and with code;
-3. verifies `Var(X) = E[X**2] - E[X]**2`;
-4. demonstrates Bayes' rule using a small finite example;
-5. defines \(f(w)=(w-3)^2\);
-6. computes the exact derivative \(2(w-3)\);
-7. estimates the derivative numerically using a central finite difference;
-8. compares the numerical derivative with the exact derivative for several \(h\) values;
-9. runs gradient descent from several starting points;
-10. deliberately chooses a learning rate that is too large and records what happens;
-11. plots the objective and the parameter trajectory.
+### A — probability
+
+Define a small discrete distribution and assert that probabilities sum to 1.
+
+### B — expectation and variance
+
+Compute expectation and variance manually. Also verify numerically that
+
+$$\mathrm{Var}(X)=E[X^2]-(E[X])^2$$
+
+### C — Bayes
+
+Create a small finite example and calculate $P(A\mid B)$ both directly and through Bayes' rule. Assert that the results agree.
+
+### D — derivative check
+
+For $f(w)=(w-3)^2$, compare the exact derivative $2(w-3)$ with central finite differences for several $h$ values. Explain why the approximation eventually stops improving as $h$ becomes extremely small.
+
+### E — gradient descent
+
+Run gradient descent from multiple starting points. Try at least one sensible learning rate and one deliberately excessive learning rate. Record the parameter and objective trajectories.
 
 ### Required prediction before execution
 
-Before running gradient descent, predict:
+Predict what should happen before running the code:
 
-- what happens for a small learning rate;
-- what happens for a moderate learning rate;
-- what happens when the learning rate is too large;
-- why the sign of the update changes on opposite sides of the minimum.
+- small learning rate;
+- moderate learning rate;
+- excessive learning rate;
+- starting on either side of the minimum.
 
-Then test the predictions.
+Then compare predictions with observations.
 
 ---
 
-## Exercises
+## 17. Exercises
 
-1. A random variable takes values 0 and 1 with probabilities 0.7 and 0.3. Compute its expectation and variance.
-2. Explain why \(E[X+Y]=E[X]+E[Y]\) does not require independence.
-3. Derive Bayes' rule from the definition of conditional probability.
+1. A random variable takes values 0 and 1 with probabilities 0.7 and 0.3. Compute expectation and variance.
+2. Explain why $E[X+Y]=E[X]+E[Y]$ does not require independence.
+3. Derive Bayes' rule from conditional probability.
 4. Give an example where a density value exceeds 1 without violating probability axioms.
-5. For \(f(w)=(w-4)^2\), derive the gradient-descent update.
+5. For $f(w)=(w-4)^2$, derive the gradient-descent update.
 6. Explain why a finite-difference derivative is an approximation.
 7. Explain the difference between a gradient and an optimizer.
 8. Explain why a mini-batch gradient is useful but noisy.
-9. Given a loss that decreases on the training set but increases on validation data, what phenomenon might you suspect and what experiment would you run next?
+9. If training loss decreases while validation loss increases, what phenomenon might you suspect? What experiment would you run next?
 
----
-
-## Questions you should be able to answer
+## 18. Questions you must be able to answer
 
 - What is a random variable?
 - What is the difference between a PMF and a PDF?
 - Why is a PDF value not itself a probability?
 - What does expectation mean?
-- Why can the expected value be impossible as an observed outcome?
+- Why can expected value be impossible as an observed outcome?
 - What does variance measure?
-- Can expectation be distributed over a sum without independence?
-- What does \(P(A\mid B)\) mean?
-- Derive Bayes' rule.
+- Can expectation distribute over a sum without independence?
+- What does $P(A\mid B)$ mean?
+- Can you derive Bayes' rule?
 - What is a loss function?
 - What is a gradient?
 - Why does gradient descent subtract the gradient?
-- What does the learning rate control?
+- What does learning rate control?
 - Why does a mini-batch gradient differ from the full-dataset gradient?
 - What exactly does backpropagation compute?
 - What exactly does an optimizer do?
 
----
+## 19. Acceptance criteria
 
-## Acceptance criteria
+Pass only when you can calculate expectation and variance for simple distributions, explain PMF versus PDF, derive Bayes' rule and the variance identity, explain gradient descent from the first-order approximation, numerically verify a derivative, demonstrate stable and poorly chosen learning-rate behavior, and distinguish backpropagation, gradients, losses and optimizers.
 
-The lesson is complete only when you can:
-
-- calculate expectation and variance for simple discrete distributions;
-- explain PMF versus PDF correctly;
-- derive Bayes' rule and the variance identity;
-- explain gradient descent from the first-order approximation;
-- numerically verify a derivative with finite differences;
-- demonstrate stable and unstable learning-rate behavior;
-- distinguish backpropagation, gradients, loss, and optimization;
-- explain why mini-batch training is an approximation to the full objective gradient.
-
-## Required evidence
+### Required evidence
 
 - Reproducible Python/NumPy experiment committed to GitHub.
-- Hand derivations for Bayes' rule, variance identity, and gradient-descent direction.
+- Hand derivations for Bayes' rule, variance identity and gradient-descent direction.
 - Numerical derivative comparison.
-- Plot showing at least one stable and one unstable/poorly chosen learning-rate run.
-- Short written interpretation of the observed behavior.
+- Plot showing stable and poorly chosen learning-rate behavior.
+- Short written interpretation of the observations.
 
-## Evaluation criteria
+## References and proof sources
 
-| Dimension | What is being checked |
-|---|---|
-| Conceptual understanding | Correct probability and optimization mental models |
-| Implementation correctness | Numerical calculations and gradient experiment are correct |
-| AI relevance | Correct connection to ML loss, training, mini-batches and later LLM training |
-| Engineering quality | Reproducible experiment and clear assertions/plots |
-| Experimental methodology | Predictions are made before execution and compared with observations |
-| Reasoning & tradeoffs | Can explain learning-rate and batch-size tradeoffs without slogans |
+1. Ian Goodfellow, Yoshua Bengio, Aaron Courville, *Deep Learning*, Chapters 3 and 4.  
+   https://www.deeplearningbook.org/
+2. Stanford CS229 course materials, including probability and optimization foundations.  
+   https://cs229.stanford.edu/
+3. MIT OpenCourseWare, calculus and linear-algebra materials for supporting mathematical foundations.  
+   https://ocw.mit.edu/
 
-## References
-
-1. Ian Goodfellow, Yoshua Bengio, Aaron Courville, *Deep Learning*, MIT Press — Chapters 3 (Probability and Information Theory) and 4 (Numerical Computation): https://www.deeplearningbook.org/
-2. Stanford CS229 course materials — probability, supervised learning, linear regression, gradient descent and optimization topics: https://cs229.stanford.edu/summer2020/syllabus.html
-3. MIT OpenCourseWare / Gilbert Strang linear-algebra materials — supporting mathematical foundations: https://math.mit.edu/~gs/LectureNotes/
-
-**Source note:** Probability identities and calculus results used here are standard mathematical results. The lesson includes their derivations where they are central to later AI mechanisms. Optimization statements are intentionally qualified: gradient descent is a local first-order method, not a universal guarantee of monotonic improvement.
+**Source note:** central mathematical claims are derived in the lesson where practical. Optimization claims are deliberately qualified: gradient descent is a local first-order method, not a universal guarantee of monotonic improvement.
