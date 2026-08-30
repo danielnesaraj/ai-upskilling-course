@@ -136,7 +136,7 @@ age        = 8 years
 
 Put those numbers together:
 
-$$x=\begin{bmatrix}1200\\3\\8\end{bmatrix}$$
+$$x=\begin{pmatrix}1200\\3\\8\end{pmatrix}$$
 
 That is a **vector**.
 
@@ -144,9 +144,9 @@ A vector is simply an ordered collection of numbers.
 
 The order matters. These two are different representations:
 
-$$\begin{bmatrix}1200\\3\\8\end{bmatrix}
+$$\begin{pmatrix}1200\\3\\8\end{pmatrix}
 \neq
-\begin{bmatrix}3\\1200\\8\end{bmatrix}$$
+\begin{pmatrix}3\\1200\\8\end{pmatrix}$$
 
 because the positions have different meanings.
 
@@ -175,11 +175,11 @@ For a 768-dimensional embedding, drawing 768 axes is impossible. The vector is s
 
 Take:
 
-$$a=\begin{bmatrix}2\\1\end{bmatrix},\qquad b=\begin{bmatrix}3\\4\end{bmatrix}$$
+$$a=\begin{pmatrix}2\\1\end{pmatrix},\qquad b=\begin{pmatrix}3\\4\end{pmatrix}$$
 
 Add corresponding positions:
 
-$$a+b=\begin{bmatrix}2+3\\1+4\end{bmatrix}=\begin{bmatrix}5\\5\end{bmatrix}$$
+$$a+b=\begin{pmatrix}2+3\\1+4\end{pmatrix}=\begin{pmatrix}5\\5\end{pmatrix}$$
 
 Geometrically, adding vectors is equivalent to following one arrow and then the other.
 
@@ -189,7 +189,7 @@ This is useful because many physical quantities—position changes, velocity cha
 
 Multiply by a number:
 
-$$2\begin{bmatrix}2\\1\end{bmatrix}=\begin{bmatrix}4\\2\end{bmatrix}$$
+$$2\begin{pmatrix}2\\1\end{pmatrix}=\begin{pmatrix}4\\2\end{pmatrix}$$
 
 The direction stays the same and the length doubles when the scalar is positive.
 
@@ -242,7 +242,7 @@ That calculation is a **dot product**.
 
 Write the numbers as vectors:
 
-$$x=\begin{bmatrix}8\\6\\9\end{bmatrix},\qquad w=\begin{bmatrix}5\\3\\2\end{bmatrix}$$
+$$x=\begin{pmatrix}8\\6\\9\end{pmatrix},\qquad w=\begin{pmatrix}5\\3\\2\end{pmatrix}$$
 
 Then:
 
@@ -288,13 +288,13 @@ This is why understanding dot products is much more important for AI than memori
 
 Now suppose two vectors describe things:
 
-$$x=\begin{bmatrix}1\\1\end{bmatrix},\qquad y=\begin{bmatrix}1\\1\end{bmatrix}$$
+$$x=\begin{pmatrix}1\\1\end{pmatrix},\qquad y=\begin{pmatrix}1\\1\end{pmatrix}$$
 
 Their dot product is positive and large relative to their sizes.
 
 If:
 
-$$y=\begin{bmatrix}-1\\-1\end{bmatrix}$$
+$$y=\begin{pmatrix}-1\\-1\end{pmatrix}$$
 
 then:
 
@@ -304,7 +304,7 @@ They point in opposite directions.
 
 If:
 
-$$y=\begin{bmatrix}1\\-1\end{bmatrix}$$
+$$y=\begin{pmatrix}1\\-1\end{pmatrix}$$
 
 then:
 
@@ -334,7 +334,7 @@ opposite direction   →  -1
 
 Example:
 
-$$x=\begin{bmatrix}1\\1\end{bmatrix},\qquad y=\begin{bmatrix}100\\100\end{bmatrix}$$
+$$x=\begin{pmatrix}1\\1\end{pmatrix},\qquad y=\begin{pmatrix}100\\100\end{pmatrix}$$
 
 They have very different magnitudes, but exactly the same direction, so their cosine similarity is 1.
 
@@ -373,11 +373,11 @@ That is a matrix-like arrangement of numbers.
 
 Mathematically:
 
-$$X=\begin{bmatrix}
+$$X=\begin{pmatrix}
 1200&3&8\\
 1800&4&5\\
 900&2&20
-\end{bmatrix}$$
+\end{pmatrix}$$
 
 It has 3 rows and 3 columns, so its shape is $3\times3$.
 
@@ -392,26 +392,26 @@ In AI, a matrix often represents a batch of examples or a set of model parameter
 
 Take:
 
-$$A=\begin{bmatrix}
+$$A=\begin{pmatrix}
 1&2&3\\
 4&5&6
-\end{bmatrix},\qquad
-x=\begin{bmatrix}
+\end{pmatrix},\qquad
+x=\begin{pmatrix}
 2\\
 1\\
 0
-\end{bmatrix}$$
+\end{pmatrix}$$
 
 Each row of $A$ performs a dot product with $x$:
 
-$$Ax=\begin{bmatrix}
+$$Ax=\begin{pmatrix}
 1(2)+2(1)+3(0)\\
 4(2)+5(1)+6(0)
-\end{bmatrix}
-=\begin{bmatrix}
+\end{pmatrix}
+=\begin{pmatrix}
 4\\
 13
-\end{bmatrix}$$
+\end{pmatrix}$$
 
 **This is the visual idea to remember:**
 
@@ -501,15 +501,15 @@ Depending on $A$, it can stretch, shrink, rotate, reflect, project, mix or other
 
 Take:
 
-$$A=\begin{bmatrix}2&0\\0&3\end{bmatrix}$$
+$$A=\begin{pmatrix}2&0\\0&3\end{pmatrix}$$
 
 and:
 
-$$x=\begin{bmatrix}1\\2\end{bmatrix}$$
+$$x=\begin{pmatrix}1\\2\end{pmatrix}$$
 
 Then:
 
-$$Ax=\begin{bmatrix}2\\6\end{bmatrix}$$
+$$Ax=\begin{pmatrix}2\\6\end{pmatrix}$$
 
 The first coordinate was doubled and the second tripled.
 
@@ -603,11 +603,11 @@ For a vector, apply it component by component.
 
 Example:
 
-$$z=\begin{bmatrix}3\\-1\\0.5\end{bmatrix}$$
+$$z=\begin{pmatrix}3\\-1\\0.5\end{pmatrix}$$
 
 then:
 
-$$\mathrm{ReLU}(z)=\begin{bmatrix}3\\0\\0.5\end{bmatrix}$$
+$$\mathrm{ReLU}(z)=\begin{pmatrix}3\\0\\0.5\end{pmatrix}$$
 
 The operation is simple. Its importance comes from inserting nonlinearity into the network.
 
@@ -664,21 +664,21 @@ This is why tensor shapes are not bookkeeping trivia. They tell you what computa
 
 Let:
 
-$$x=\begin{bmatrix}2\\1\\0\end{bmatrix},\qquad
-W=\begin{bmatrix}1&0&2\\-1&3&1\end{bmatrix},\qquad
-b=\begin{bmatrix}1\\-2\end{bmatrix}$$
+$$x=\begin{pmatrix}2\\1\\0\end{pmatrix},\qquad
+W=\begin{pmatrix}1&0&2\\-1&3&1\end{pmatrix},\qquad
+b=\begin{pmatrix}1\\-2\end{pmatrix}$$
 
 First:
 
-$$Wx=\begin{bmatrix}2\\1\end{bmatrix}$$
+$$Wx=\begin{pmatrix}2\\1\end{pmatrix}$$
 
 Then:
 
-$$z=Wx+b=\begin{bmatrix}3\\-1\end{bmatrix}$$
+$$z=Wx+b=\begin{pmatrix}3\\-1\end{pmatrix}$$
 
 Then:
 
-$$\mathrm{ReLU}(z)=\begin{bmatrix}3\\0\end{bmatrix}$$
+$$\mathrm{ReLU}(z)=\begin{pmatrix}3\\0\end{pmatrix}$$
 
 Do not memorize the result. Be able to reconstruct it.
 
@@ -781,15 +781,15 @@ Do not just print the shape. Explain what the three numbers mean.
 2. Give two real-world examples where a vector is useful.
 3. Calculate:
 
-$$\begin{bmatrix}2\\3\end{bmatrix}^T
-\begin{bmatrix}4\\5\end{bmatrix}$$
+$$\begin{pmatrix}2\\3\end{pmatrix}^T
+\begin{pmatrix}4\\5\end{pmatrix}$$
 
 4. Explain that calculation in plain English.
 5. Why does cosine similarity treat $[1,1]$ and $[100,100]$ as pointing in the same direction?
 6. Calculate the result of:
 
-$$\begin{bmatrix}1&2&3\\4&5&6\end{bmatrix}
-\begin{bmatrix}2\\1\\0\end{bmatrix}$$
+$$\begin{pmatrix}1&2&3\\4&5&6\end{pmatrix}
+\begin{pmatrix}2\\1\\0\end{pmatrix}$$
 
 7. Why is $(2\times3)(2\times1)$ invalid?
 8. Explain matrix multiplication as "many dot products".
