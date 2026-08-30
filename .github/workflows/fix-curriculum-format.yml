@@ -1,0 +1,59 @@
+name: Fix curriculum LaTeX formatting
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: ${{ hashFiles('.curriculum-format-fix') != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Normalize curriculum math formatting
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          files = [
+              Path('curriculum/L01-math-vectors-matrices-functions.md'),
+              Path('curriculum/L02-math-probability-distributions-optimization-v2.md'),
+          ]
+
+          for path in files:
+              text = path.read_text(encoding='utf-8')
+
+              # Repair accidental literal-newline insertion in LaTeX commands such as \\nabla.
+              text = re.sub(r'\\\\\nabla', r'\\\\nabla', text)
+
+              # Inside matrix-like environments, a row separator must be two backslashes.
+              for env in ('bmatrix', 'pmatrix', 'Bmatrix', 'vmatrix', 'Vmatrix', 'matrix', 'smallmatrix'):
+                  pattern = re.compile(r'(\\begin\{' + env + r'\})(.*?)(\\end\{' + env + r'\})', re.DOTALL)
+
+                  def fix_matrix(m):
+                      body = m.group(2)
+                      # Normalize one-or-more backslashes before a newline to exactly two.
+                      body = re.sub(r'(?<!\\)\\(?=\n)', r'\\\\', body)
+                      body = re.sub(r'(?<!\\)\\{3,}(?=\n)', r'\\\\', body)
+                      return m.group(1) + body + m.group(3)
+
+                  text = pattern.sub(fix_matrix, text)
+
+              path.write_text(text, encoding='utf-8')
+
+          Path('.curriculum-format-fix').unlink()
+          PY
+
+      - name: Commit fixes
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add curriculum .curriculum-format-fix
+          git diff --cached --quiet && exit 0
+          git commit -m 'Fix curriculum math rendering'
+          git push
