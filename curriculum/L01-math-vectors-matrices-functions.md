@@ -2,373 +2,847 @@
 
 **Phase:** Foundations  
 **Sequence:** 1  
-**Style:** Compact textbook + work packet  
-**Estimated effort:** 2.5–3 hours
+**Format:** Compact textbook + multi-module work packet  
+**Target effort:** ~5–6 hours across modules  
 
-## 1. Why this matters for AI
+> **Purpose:** rebuild the mathematical intuition needed for AI. This is not an engineering-math course. You should be able to understand the ideas from this document even if your last comfortable experience with mathematics was around school level.
 
-A large amount of machine learning can be reduced to a recurring pattern:
+---
 
-**represent data numerically → transform the representation → measure an objective → adjust parameters.**
+## How to use this lesson
 
-Linear algebra supplies much of the language for the first two steps. Later, the same ideas appear as embeddings, neural-network layers, attention matrices, logits, projections and batched tensor operations.
+Do not try to memorize the notation first.
 
-The goal here is not to reproduce a university linear-algebra course. It is to build enough understanding that expressions such as `x @ W + b` stop looking like framework magic.
+For each module:
 
-## 2. Scalars, vectors, matrices and tensors
+1. understand the problem in plain English;
+2. look at the visual/model;
+3. work through the tiny examples;
+4. learn the notation;
+5. connect it to AI;
+6. implement it;
+7. explain it back without looking.
 
-### Scalar
+If a formula feels like magic, stop. The formula is supposed to be a compact way of writing something you already understand.
 
-A scalar is a single number.
+---
 
-$$x \in \mathbb{R}$$
+# Module 1 — Numbers, variables and functions
 
-### Vector
+## 1.1 Why do we need variables?
 
-A vector is an ordered collection of numbers. For example:
+Suppose a taxi charges ₹100 to start and ₹20 per kilometre.
 
-$$
-x = \begin{bmatrix}
-2 \\
--1 \\
-4
-\end{bmatrix} \in \mathbb{R}^3
-$$
+For 3 km:
 
-There are two useful ways to think about a vector: as an ordered numerical representation and, when useful, as a geometric object with magnitude and direction. An embedding is a vector, but its coordinates do not normally correspond to human-readable features.
+$$100 + 20(3) = 160$$
 
-### Matrix
+For 10 km:
 
-A matrix is a rectangular array. For example:
+$$100 + 20(10) = 300$$
 
-$$
-A = \begin{bmatrix}
-1 & 2 & 3 \\
-4 & 5 & 6
-\end{bmatrix}
-$$
+Instead of writing a new calculation for every distance, call the distance $x$:
 
-This matrix has 2 rows and 3 columns, so its shape is $2\times3$.
+$$\mathrm{cost}(x)=100+20x$$
 
-A matrix can represent data, model parameters, or a transformation. Its meaning depends on context.
+That is the basic idea of a **function**: a rule that takes an input and produces an output.
 
-### Tensor
+```text
+input x ─────► [ rule: 100 + 20x ] ─────► output
+  3                                      160
+ 10                                      300
+```
 
-In ML software, a tensor is generally a multidimensional numerical array with a shape and data type. A matrix is a two-dimensional case.
-
-Do not equate "number of axes" with the strict mathematical definition of tensor rank. For engineering work, first ask what each axis represents and what its shape is.
-
-## 3. Vectors: the operations that keep reappearing
-
-Let
-
-$$
-x=\begin{bmatrix}
-2 \\
-3
-\end{bmatrix},\qquad
-y=\begin{bmatrix}
-4 \\
--1
-\end{bmatrix}
-$$
-
-Add vectors componentwise and multiply a vector by a scalar componentwise.
-
-The dot product is the sum of pairwise products:
-
-$$x^T y=\sum_{i=1}^{n}x_i y_i$$
-
-For our example:
-
-$$x^T y=2(4)+3(-1)=5$$
-
-The useful ML intuition is **weighted sum**: multiply each input component by a corresponding weight, then add.
-
-That is already the core calculation of a linear model:
-
-$$\hat y=w^T x+b$$
-
-The Euclidean/L2 norm is
-
-$$\lVert x\rVert_2=\sqrt{x^T x}=\sqrt{\sum_i x_i^2}$$
-
-For nonzero vectors, cosine similarity is
-
-$$\mathrm{cos\_sim}(x,y)=\frac{x^T y}{\lVert x\rVert_2\lVert y\rVert_2}$$
-
-It measures angular alignment. Same direction gives 1, perpendicular vectors give 0, and opposite directions give -1. It deliberately removes magnitude; $[1,1]$ and $[100,100]$ have cosine similarity 1.
-
-## 4. Why the dot product has a geometric meaning
-
-For nonzero vectors with angle $\theta$ between them:
-
-$$x^T y=\lVert x\rVert_2\lVert y\rVert_2\cos\theta$$
-
-The law of cosines gives
-
-$$\lVert x-y\rVert_2^2=\lVert x\rVert_2^2+\lVert y\rVert_2^2-2\lVert x\rVert_2\lVert y\rVert_2\cos\theta$$
-
-while direct expansion gives
-
-$$
-\begin{aligned}
-\lVert x-y\rVert_2^2
-&=(x-y)^T(x-y)\\
-&=x^Tx-2x^Ty+y^Ty\\
-&=\lVert x\rVert_2^2+\lVert y\rVert_2^2-2x^Ty
-\end{aligned}
-$$
-
-Equating them gives the dot-product/angle identity. Dividing by the nonzero norms gives cosine similarity.
-
-## 5. Matrix-vector multiplication
-
-Take
-
-$$
-A=\begin{bmatrix}
-1&2&3 \\
-4&5&6
-\end{bmatrix},\qquad
-x=\begin{bmatrix}
-2 \\
-1 \\
-0
-\end{bmatrix}
-$$
-
-Then
-
-$$
-Ax=\begin{bmatrix}
-1(2)+2(1)+3(0) \\
-4(2)+5(1)+6(0)
-\end{bmatrix}
-=\begin{bmatrix}
-4 \\
-13
-\end{bmatrix}
-$$
-
-Each output is the dot product of one row of $A$ with $x$.
-
-The shape rule is
-
-$$(m\times n)(n\times p)=(m\times p)$$
-
-The inner dimensions must match; the result keeps the outer dimensions.
-
-## 6. Matrix-matrix multiplication
-
-For compatible matrices,
-
-$$(AB)_{ij}=\sum_k A_{ik}B_{kj}$$
-
-Again, each output element is a dot product. This differs from elementwise multiplication, where $C_{ij}=A_{ij}B_{ij}$.
-
-Matrix multiplication is generally not commutative:
-
-$$AB\ne BA$$
-
-but it is associative:
-
-$$A(BC)=(AB)C$$
-
-## 7. Matrices as transformations
-
-A matrix defines a function
-
-$$f(x)=Ax$$
-
-It can represent scaling, rotation, reflection or projection. It is linear because
-
-$$A(x+y)=Ax+Ay$$
-
-and
-
-$$A(cx)=cAx$$
-
-A neural-network layer commonly starts with
-
-$$z=Wx+b$$
-
-$Wx$ is linear; $Wx+b$ is **affine**. The bias permits a shift, so the full mapping is not strictly linear when $b\ne0$.
-
-## 8. Composition explains neural-network depth
-
-Let
-
-$$f(x)=Ax+a,\qquad g(x)=Bx+b$$
-
-Then
-
-$$g(f(x))=B(Ax+a)+b=(BA)x+(Ba+b)$$
-
-So affine transformations compose into another affine transformation.
-
-Therefore
-
-$$W_2(W_1x+b_1)+b_2=(W_2W_1)x+(W_2b_1+b_2)$$
-
-A stack of affine layers without nonlinearities can therefore collapse into one affine transformation. A nonlinear activation between them prevents that collapse and is essential to the expressive power of ordinary feed-forward neural networks.
-
-## 9. Functions and parameters
-
-A function maps inputs to outputs:
+The notation
 
 $$f:X\rightarrow Y$$
 
-ML usually uses a parameterized function:
+simply says: function $f$ maps inputs from $X$ to outputs in $Y$.
 
-$$f_\theta(x)$$
+You do not need to make this more mysterious than that.
 
-Keep these separate: input $x$ is data; parameters $\theta$ are values training can adjust; output is the prediction or representation; target $y$ is the desired answer when one exists; loss is a numerical objective used to judge the result.
+## 1.2 Why functions matter in AI
 
-For linear regression,
+A model is ultimately a function.
 
-$$\hat y=w^T x+b$$
+For example:
 
-The architecture determines a family of computations; learned parameters select one particular function from that family.
+$$f_\theta(x)=\hat y$$
 
-## 10. Why batches are matrices
+means that a function, controlled by parameters $\theta$, takes input $x$ and produces prediction $\hat y$.
 
-With $N$ examples and $d$ features, a common representation is
+A neural network is a complicated function. Training means changing $\theta$ so that the function behaves better on the task.
 
-$$X\in\mathbb{R}^{N\times d}$$
+That single idea will recur throughout the entire course.
 
-With $w\in\mathbb{R}^{d}$,
+## 1.3 Composition: functions can be chained
 
-$$Xw\in\mathbb{R}^{N}$$
+Suppose:
 
-gives one prediction per example for a linear model.
+- function $f$ converts Celsius to Fahrenheit;
+- function $g$ converts Fahrenheit to a display string.
 
-## 11. Worked neural-layer example
+You can do:
 
-Let
+$$x\rightarrow f(x)\rightarrow g(f(x))$$
 
-$$
-x=\begin{bmatrix}
-2 \\
-1 \\
-0
-\end{bmatrix},\quad
-W=\begin{bmatrix}
-1&0&2 \\
--1&3&1
-\end{bmatrix},\quad
-b=\begin{bmatrix}
-1 \\
--2
-\end{bmatrix}
-$$
+This is **composition**.
 
-First,
+Neural networks do the same thing repeatedly:
 
-$$
-Wx=\begin{bmatrix}
-2 \\
-1
-\end{bmatrix}
-$$
-
-Then,
-
-$$
-z=Wx+b=\begin{bmatrix}
-3 \\
--1
-\end{bmatrix}
-$$
-
-Define ReLU componentwise by
-
-$$\mathrm{ReLU}(z_i)=\max(0,z_i)$$
-
-so
-
-$$
-\mathrm{ReLU}(z)=\begin{bmatrix}
-3 \\
-0
-\end{bmatrix}
-$$
-
-The mechanism is: **weighted sums → bias shift → nonlinear transformation**.
-
-## 12. Debugging habit
-
-For code such as
-
-```python
-hidden = x @ W + b
+```text
+input
+  ↓
+function 1
+  ↓
+function 2
+  ↓
+function 3
+  ↓
+output
 ```
 
-ask: What are the shapes? What does each axis represent? Why are the inner dimensions compatible? What output shape should result? What is the bias shape? Is broadcasting involved? Is there a nonlinearity afterward?
+Later, "deep" networks will largely mean that we compose many parameterized transformations, with nonlinear operations between them.
 
-Start with mathematics, not framework documentation.
+## 1.4 Example: recommendation
 
-## 13. Common misconceptions
+Imagine a book recommender has three input numbers:
 
-- A vector is not necessarily a 3-D arrow.
-- Matrix multiplication is not matching-cell multiplication.
-- Transpose is not inverse; an inverse satisfies $A^{-1}A=I$ when it exists.
-- $Wx+b$ is affine, not strictly linear.
-- Cosine similarity intentionally removes magnitude.
-- More embedding dimensions do not automatically mean better embeddings.
-- Array dimensionality is not the same thing as mathematical tensor rank.
+```text
+likes mystery       = 0.9
+likes history       = 0.7
+likes romance       = 0.2
+```
 
-## 14. Implementation experiment
+Those numbers are a representation of the user. A model can transform that representation into a score for a candidate book.
 
-Use **Python + NumPy only**. Create `experiments/foundations/math01_linear_algebra.py`.
+The important idea is not the specific numbers. It is:
 
-1. Predict the Section 5 result by hand, then verify it.
-2. Verify the shapes of $(3\times4)(4\times2)$, $(5\times3)(3)$ and $(2\times5)(5\times7)$.
-3. Deliberately perform an invalid multiplication and explain the error.
-4. Implement cosine similarity and test identical, orthogonal, opposite and same-direction/different-magnitude vectors.
-5. Verify $g(f(x))=(BA)x+(Ba+b)$ with numerical assertions.
-6. Implement the neural-layer example and verify every intermediate value.
+**real-world thing → numerical representation → mathematical function → prediction/score.**
 
-## 15. Exercises
+---
 
-1. Calculate the L2 norm of $[1,2,2]$.
-2. Calculate the dot product of $[1,2,3]$ and $[4,0,-1]$.
-3. Calculate cosine similarity for $[1,0]$ and $[1,1]$.
-4. Give the output shape of $(3\times4)(4\times2)$ and explain why.
-5. Explain matrix-vector multiplication using dot products.
-6. Show why two affine layers without activation collapse into one affine layer.
-7. Explain $N$ and $d$ in $X\in\mathbb{R}^{N\times d}$.
-8. Explain exactly what cosine similarity discards.
-9. If `x.shape == (32, 128)` and `W.shape == (128, 64)`, what is `x @ W`'s shape? What does each dimension mean?
-10. Diagnose a matrix-shape error without trial-and-error changes.
+# Module 2 — Vectors: numbers that belong together
 
-## 16. Questions you must be able to answer
+## 2.1 The problem vectors solve
 
-- Why does a dot product behave like a weighted sum?
-- Why does matrix-vector multiplication produce multiple dot products?
-- Why must inner dimensions match?
-- Why is matrix multiplication useful for batches?
-- What does a matrix mean as a transformation?
-- Why is $Wx+b$ affine?
-- Why do nonlinear activations matter?
-- Why does cosine similarity ignore magnitude?
-- How do tensor shapes help debug AI systems?
+Suppose you want to describe a house using:
 
-## 17. Acceptance criteria
+```text
+area       = 1200 sq ft
+bedrooms   = 3
+age        = 8 years
+```
 
-Pass only when you can calculate the basic operations by hand, reason about shapes before running code, explain matrix multiplication as dot products, derive the cosine identity, explain affine composition, connect `x @ W + b` to the mathematics, and verify the experiments with assertions.
+Put those numbers together:
 
-**Evidence:** NumPy experiment, hand calculations, automated assertions, and written explanations of cosine similarity and affine composition.
+$$x=\begin{bmatrix}1200\\3\\8\end{bmatrix}$$
 
-## References and proof sources
+That is a **vector**.
 
-1. Goodfellow, Bengio & Courville, *Deep Learning*, Chapter 2, **Linear Algebra**.  
+A vector is simply an ordered collection of numbers.
+
+The order matters. These two are different representations:
+
+$$\begin{bmatrix}1200\\3\\8\end{bmatrix}
+\neq
+\begin{bmatrix}3\\1200\\8\end{bmatrix}$$
+
+because the positions have different meanings.
+
+## 2.2 The visual intuition
+
+A two-number vector can also be drawn as an arrow from the origin.
+
+```text
+          y
+          ↑
+       3  |        ● (2,3)
+          |       /
+       2  |      /
+          |     /
+       1  |    /
+          |   /
+       0  +----------------→ x
+             0  1  2  3
+```
+
+For two dimensions, the arrow picture is useful.
+
+For a 768-dimensional embedding, drawing 768 axes is impossible. The vector is still an ordered list of numbers; the geometric picture becomes an intuition rather than a literal drawing we can inspect directly.
+
+## 2.3 Vector addition
+
+Take:
+
+$$a=\begin{bmatrix}2\\1\end{bmatrix},\qquad b=\begin{bmatrix}3\\4\end{bmatrix}$$
+
+Add corresponding positions:
+
+$$a+b=\begin{bmatrix}2+3\\1+4\end{bmatrix}=\begin{bmatrix}5\\5\end{bmatrix}$$
+
+Geometrically, adding vectors is equivalent to following one arrow and then the other.
+
+This is useful because many physical quantities—position changes, velocity changes, forces—can naturally be represented as vectors.
+
+## 2.4 Scaling a vector
+
+Multiply by a number:
+
+$$2\begin{bmatrix}2\\1\end{bmatrix}=\begin{bmatrix}4\\2\end{bmatrix}$$
+
+The direction stays the same and the length doubles when the scalar is positive.
+
+A negative scalar reverses the direction.
+
+This simple operation becomes important when weights and learned parameters scale signals inside neural networks.
+
+## 2.5 AI examples
+
+Vectors appear everywhere:
+
+- a row of tabular features;
+- a word or sentence embedding;
+- an image after flattening or feature extraction;
+- a user's preference representation;
+- a model's parameter vector;
+- a gradient vector.
+
+Do not conclude that every vector coordinate has a human interpretation. In learned representations, individual dimensions often do not correspond neatly to concepts like "happy" or "sports".
+
+---
+
+# Module 3 — Dot products: the weighted-score machine
+
+This is one of the most important calculations in AI.
+
+## 3.1 Start with something familiar
+
+Suppose your restaurant score is:
+
+```text
+food quality     weight 5
+service          weight 3
+ambience         weight 2
+```
+
+A restaurant has scores:
+
+```text
+food             8
+service          6
+ambience         9
+```
+
+A weighted score is:
+
+$$8(5)+6(3)+9(2)=76$$
+
+That calculation is a **dot product**.
+
+Write the numbers as vectors:
+
+$$x=\begin{bmatrix}8\\6\\9\end{bmatrix},\qquad w=\begin{bmatrix}5\\3\\2\end{bmatrix}$$
+
+Then:
+
+$$w^T x=8(5)+6(3)+9(2)=76$$
+
+The superscript $T$ means **transpose**. It changes a column vector into a row vector so the multiplication is defined.
+
+## 3.2 The formula
+
+For two vectors of the same length:
+
+$$x^Ty=\sum_{i=1}^{n}x_i y_i$$
+
+Read it in English:
+
+> multiply corresponding numbers and add all the results.
+
+That is all a dot product is at this level.
+
+## 3.3 Why AI loves dot products
+
+A neuron does essentially this:
+
+$$z=w^Tx+b$$
+
+So:
+
+```text
+inputs × learned weights
+        ↓
+   add everything
+        ↓
+      + bias
+        ↓
+      output
+```
+
+The weights tell the model how strongly each input contributes to the score.
+
+This is why understanding dot products is much more important for AI than memorizing the symbol $x^Ty$.
+
+## 3.4 Similarity intuition
+
+Now suppose two vectors describe things:
+
+$$x=\begin{bmatrix}1\\1\end{bmatrix},\qquad y=\begin{bmatrix}1\\1\end{bmatrix}$$
+
+Their dot product is positive and large relative to their sizes.
+
+If:
+
+$$y=\begin{bmatrix}-1\\-1\end{bmatrix}$$
+
+then:
+
+$$x^Ty=-2$$
+
+They point in opposite directions.
+
+If:
+
+$$y=\begin{bmatrix}1\\-1\end{bmatrix}$$
+
+then:
+
+$$x^Ty=0$$
+
+They are perpendicular.
+
+The dot product therefore contains information about alignment—but its raw value also depends on vector magnitude.
+
+## 3.5 Cosine similarity
+
+To focus on direction rather than magnitude, normalize the dot product:
+
+$$\mathrm{cos\_sim}(x,y)=\frac{x^Ty}{\lVert x\rVert_2\lVert y\rVert_2}$$
+
+where:
+
+$$\lVert x\rVert_2=\sqrt{\sum_i x_i^2}$$
+
+This produces a value between -1 and 1 for ordinary nonzero real vectors.
+
+```text
+same direction       →  +1
+perpendicular        →   0
+opposite direction   →  -1
+```
+
+Example:
+
+$$x=\begin{bmatrix}1\\1\end{bmatrix},\qquad y=\begin{bmatrix}100\\100\end{bmatrix}$$
+
+They have very different magnitudes, but exactly the same direction, so their cosine similarity is 1.
+
+This idea later becomes useful for understanding embedding similarity and retrieval.
+
+## 3.6 Real-world applications
+
+Dot products appear in:
+
+- weighted scoring systems;
+- linear regression;
+- classification layers;
+- recommendation systems;
+- information retrieval;
+- embedding similarity;
+- attention mechanisms.
+
+The same arithmetic keeps appearing because it is an efficient way to measure or combine aligned numerical information.
+
+---
+
+# Module 4 — Matrices: organized collections and transformations
+
+## 4.1 Start with a spreadsheet
+
+You already know what this looks like:
+
+```text
+             area   bedrooms   age
+house A      1200      3        8
+house B      1800      4        5
+house C       900      2       20
+```
+
+That is a matrix-like arrangement of numbers.
+
+Mathematically:
+
+$$X=\begin{bmatrix}
+1200&3&8\\
+1800&4&5\\
+900&2&20
+\end{bmatrix}$$
+
+It has 3 rows and 3 columns, so its shape is $3\times3$.
+
+The meaning of each axis matters:
+
+- rows = houses;
+- columns = features.
+
+In AI, a matrix often represents a batch of examples or a set of model parameters.
+
+## 4.2 Matrix-vector multiplication
+
+Take:
+
+$$A=\begin{bmatrix}
+1&2&3\\
+4&5&6
+\end{bmatrix},\qquad
+x=\begin{bmatrix}
+2\\
+1\\
+0
+\end{bmatrix}$$
+
+Each row of $A$ performs a dot product with $x$:
+
+$$Ax=\begin{bmatrix}
+1(2)+2(1)+3(0)\\
+4(2)+5(1)+6(0)
+\end{bmatrix}
+=\begin{bmatrix}
+4\\
+13
+\end{bmatrix}$$
+
+**This is the visual idea to remember:**
+
+```text
+             x
+             ↓
+row 1  ──dot─→ output 1
+row 2  ──dot─→ output 2
+```
+
+A matrix-vector multiplication is therefore not a mysterious new operation. It is many dot products performed together.
+
+## 4.3 Why shapes matter
+
+If:
+
+$$A\in\mathbb{R}^{m\times n}$$
+
+and
+
+$$x\in\mathbb{R}^{n}$$
+
+then:
+
+$$Ax\in\mathbb{R}^{m}$$
+
+The number of columns in $A$ must match the number of entries in $x$.
+
+For example:
+
+```text
+(2 × 3) · (3 × 1) = (2 × 1)   ✓
+(2 × 3) · (2 × 1) = invalid   ✗
+```
+
+This is one of the most useful debugging habits in AI engineering: **look at shapes before looking at code.**
+
+## 4.4 Matrix-matrix multiplication
+
+Suppose:
+
+$$A\in\mathbb{R}^{m\times n},\qquad B\in\mathbb{R}^{n\times p}$$
+
+Then:
+
+$$AB\in\mathbb{R}^{m\times p}$$
+
+Each output element is a dot product:
+
+$$(AB)_{ij}=\sum_k A_{ik}B_{kj}$$
+
+So matrix multiplication is essentially **a grid of dot products**.
+
+## 4.5 Do not confuse multiplication types
+
+Elementwise multiplication:
+
+$$C_{ij}=A_{ij}B_{ij}$$
+
+Matrix multiplication:
+
+$$(AB)_{ij}=\sum_k A_{ik}B_{kj}$$
+
+They are different operations.
+
+This distinction is responsible for a remarkable number of bugs in numerical code.
+
+---
+
+# Module 5 — Matrices as machines that transform vectors
+
+## 5.1 A matrix can be more than a table
+
+A matrix can take one vector and produce another:
+
+$$f(x)=Ax$$
+
+Think of $A$ as a machine:
+
+```text
+vector x ──► [ MATRIX A ] ──► new vector Ax
+```
+
+Depending on $A$, it can stretch, shrink, rotate, reflect, project, mix or otherwise transform the vector.
+
+## 5.2 A simple scaling example
+
+Take:
+
+$$A=\begin{bmatrix}2&0\\0&3\end{bmatrix}$$
+
+and:
+
+$$x=\begin{bmatrix}1\\2\end{bmatrix}$$
+
+Then:
+
+$$Ax=\begin{bmatrix}2\\6\end{bmatrix}$$
+
+The first coordinate was doubled and the second tripled.
+
+The matrix encoded the transformation.
+
+## 5.3 Why this matters for neural networks
+
+A neural-network layer often contains:
+
+$$z=Wx+b$$
+
+The matrix $W$ mixes and scales the input values.
+
+The vector $b$ shifts the result.
+
+Then an activation function such as ReLU may change it nonlinearly.
+
+So a simplified neural layer is:
+
+```text
+input vector
+     ↓
+   W × x
+     ↓
+   + b
+     ↓
+   activation
+     ↓
+output vector
+```
+
+That is already enough to demystify a large amount of neural-network code.
+
+## 5.4 Linear vs affine
+
+A strictly linear transformation must satisfy:
+
+$$f(x+y)=f(x)+f(y)$$
+
+and:
+
+$$f(cx)=cf(x)$$
+
+For $f(x)=Wx$, this works.
+
+But:
+
+$$f(x)=Wx+b$$
+
+is generally **affine**, not linear, when $b\ne0$.
+
+Why care? Because mathematical terminology matters when we later reason about what transformations can or cannot express.
+
+---
+
+# Module 6 — Why nonlinearities make neural networks interesting
+
+Suppose we stack two affine transformations:
+
+$$f(x)=W_1x+b_1$$
+
+followed by:
+
+$$g(x)=W_2f(x)+b_2$$
+
+Substitute $f(x)$:
+
+$$g(f(x))=W_2(W_1x+b_1)+b_2$$
+
+Distribute:
+
+$$=(W_2W_1)x+(W_2b_1+b_2)$$
+
+That is still just one affine transformation.
+
+So merely stacking linear/affine layers does not create the kind of nonlinear function class we associate with deep neural networks.
+
+Add a nonlinear activation:
+
+$$h(x)=\mathrm{ReLU}(W_1x+b_1)$$
+
+and the collapse argument no longer applies in the same way.
+
+## ReLU
+
+ReLU means rectified linear unit:
+
+$$\mathrm{ReLU}(z)=\max(0,z)$$
+
+For a vector, apply it component by component.
+
+Example:
+
+$$z=\begin{bmatrix}3\\-1\\0.5\end{bmatrix}$$
+
+then:
+
+$$\mathrm{ReLU}(z)=\begin{bmatrix}3\\0\\0.5\end{bmatrix}$$
+
+The operation is simple. Its importance comes from inserting nonlinearity into the network.
+
+---
+
+# Module 7 — Functions, parameters and batches in real AI code
+
+## 7.1 A linear model
+
+A simple model is:
+
+$$\hat y=w^Tx+b$$
+
+Here:
+
+- $x$ = input data;
+- $w$ = learned weights;
+- $b$ = learned bias;
+- $\hat y$ = prediction.
+
+The model is not learning a new mathematical rule every time. It is learning the **parameters** of a parameterized function.
+
+## 7.2 Batches
+
+Suppose we have 32 examples and each has 128 features.
+
+A common representation is:
+
+$$X\in\mathbb{R}^{32\times128}$$
+
+If the weight matrix maps 128 features to 64 outputs:
+
+$$W\in\mathbb{R}^{128\times64}$$
+
+then:
+
+$$XW\in\mathbb{R}^{32\times64}$$
+
+Read this as:
+
+```text
+32 examples
+   ×
+128 input features
+   ↓
+128 → 64 learned transformation
+   ↓
+32 examples × 64 output features
+```
+
+This is why tensor shapes are not bookkeeping trivia. They tell you what computation is actually being performed.
+
+## 7.3 A worked neural layer
+
+Let:
+
+$$x=\begin{bmatrix}2\\1\\0\end{bmatrix},\qquad
+W=\begin{bmatrix}1&0&2\\-1&3&1\end{bmatrix},\qquad
+b=\begin{bmatrix}1\\-2\end{bmatrix}$$
+
+First:
+
+$$Wx=\begin{bmatrix}2\\1\end{bmatrix}$$
+
+Then:
+
+$$z=Wx+b=\begin{bmatrix}3\\-1\end{bmatrix}$$
+
+Then:
+
+$$\mathrm{ReLU}(z)=\begin{bmatrix}3\\0\end{bmatrix}$$
+
+Do not memorize the result. Be able to reconstruct it.
+
+---
+
+# Module 8 — The four mental models to keep
+
+### Vector
+
+**A bundle of numbers with an order and meaning.**
+
+### Dot product
+
+**Multiply corresponding values and add them. Often acts as a weighted score or alignment measure.**
+
+### Matrix
+
+**A rectangular collection of numbers that can also represent a transformation.**
+
+### Function
+
+**A rule that maps inputs to outputs. AI models are parameterized functions.**
+
+If those four ideas become intuitive, much of the notation that follows in the course becomes less intimidating.
+
+---
+
+# Real-world application map
+
+| Concept | Everyday interpretation | AI use |
+|---|---|---|
+| Vector | A bundle of measurements | Features, embeddings, parameters |
+| Dot product | Weighted score | Neurons, retrieval, similarity |
+| Norm | Size/length of a vector | Normalization, similarity |
+| Matrix | Structured table / transformation | Weights, batches, projections |
+| Matrix multiplication | Many weighted combinations | Neural layers, attention |
+| Function | Input → output rule | Model |
+| Composition | Chain of transformations | Deep networks |
+| Nonlinearity | A rule that bends/changes behavior | Activations |
+
+---
+
+# Experiment — Make the math visible in Python
+
+Use **Python + NumPy** only.
+
+Create:
+
+`experiments/foundations/math01_linear_algebra.py`
+
+## Required experiments
+
+### A. Vectors
+
+Create two vectors and verify addition, subtraction, scalar multiplication and norms.
+
+### B. Dot product
+
+Calculate a weighted restaurant score by hand, then reproduce it with NumPy.
+
+### C. Cosine similarity
+
+Test:
+
+- identical direction;
+- opposite direction;
+- perpendicular vectors;
+- same direction but very different magnitude.
+
+Predict the result before executing.
+
+### D. Matrix multiplication
+
+Reproduce the worked matrix-vector example manually and with NumPy.
+
+Then deliberately try an incompatible shape and explain why it fails.
+
+### E. Neural layer
+
+Implement:
+
+```python
+z = x @ W + b
+output = np.maximum(z, 0)
+```
+
+Print every intermediate shape and value.
+
+### F. Batch reasoning
+
+Create an array with shape `(32, 128)` and a weight matrix `(128, 64)`. Verify that the result is `(32, 64)`.
+
+Do not just print the shape. Explain what the three numbers mean.
+
+---
+
+# Exercises
+
+1. Explain a vector without using the word "array".
+2. Give two real-world examples where a vector is useful.
+3. Calculate:
+
+$$\begin{bmatrix}2\\3\end{bmatrix}^T
+\begin{bmatrix}4\\5\end{bmatrix}$$
+
+4. Explain that calculation in plain English.
+5. Why does cosine similarity treat $[1,1]$ and $[100,100]$ as pointing in the same direction?
+6. Calculate the result of:
+
+$$\begin{bmatrix}1&2&3\\4&5&6\end{bmatrix}
+\begin{bmatrix}2\\1\\0\end{bmatrix}$$
+
+7. Why is $(2\times3)(2\times1)$ invalid?
+8. Explain matrix multiplication as "many dot products".
+9. Explain the difference between elementwise multiplication and matrix multiplication.
+10. Why is $Wx+b$ affine rather than strictly linear?
+11. Why does adding ReLU between affine layers change what the network can represent?
+12. If `X.shape == (32, 128)` and `W.shape == (128, 64)`, explain every dimension of `X @ W`.
+
+---
+
+# Questions you must be able to answer
+
+- What problem does a vector solve?
+- What is a dot product actually calculating?
+- Why is a dot product useful for weighted scoring?
+- What does cosine similarity remove from the comparison?
+- Why must matrix multiplication dimensions line up?
+- Why can matrix multiplication be understood as many dot products?
+- How can a matrix act as a transformation?
+- What is the difference between linear and affine?
+- Why do neural networks need nonlinearities?
+- What does `X @ W` mean when `X` is a batch?
+- What do the axes of a tensor mean?
+
+---
+
+# Acceptance criteria
+
+Pass only when you can:
+
+- calculate the basic vector and dot-product operations by hand;
+- explain the calculations without relying on notation;
+- reason about matrix shapes before running code;
+- explain matrix-vector multiplication as multiple dot products;
+- distinguish matrix multiplication from elementwise multiplication;
+- explain $Wx+b$ as an affine transformation;
+- explain why nonlinear activation changes the situation;
+- implement and test the examples with NumPy;
+- inspect `X @ W + b` and predict its output shape and meaning.
+
+**Required evidence:** Python experiment, assertions, hand calculations, and short written explanations for dot product, cosine similarity, matrix multiplication and affine transformation.
+
+---
+
+# References and proof sources
+
+1. Goodfellow, Bengio & Courville, *Deep Learning*, Chapter 2 — Linear Algebra. This chapter deliberately focuses on the linear-algebra topics needed for deep learning.  
    https://www.deeplearningbook.org/contents/linear_algebra.html
-2. Gilbert Strang, MIT, *Lecture Notes for Linear Algebra*.  
+2. Gilbert Strang, MIT, *Lecture Notes for Linear Algebra*. Relevant sections include vectors, dot products, matrix-vector multiplication and matrix-matrix multiplication.  
    https://math.mit.edu/~gs/LectureNotes/
-3. Gilbert Strang, *Introduction to Linear Algebra*, 6th-edition resources.  
+3. Gilbert Strang, *Introduction to Linear Algebra*, 6th edition resources.  
    https://math.mit.edu/~gs/linearalgebra/ila6/indexila6.html
-4. GitHub Docs, *Writing mathematical expressions*. GitHub renders Markdown mathematics with MathJax and supports `$...$`, `$$...$$`, and `math` fenced blocks.  
+4. GitHub Docs, *Writing mathematical expressions*. GitHub Markdown supports LaTeX math through MathJax and supports `$...$`, `$$...$$` and `math` fenced blocks.  
    https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/writing-mathematical-expressions
 
-**Proofs:** the dot-product/angle identity is derived from the law of cosines and the algebraic dot-product definition; affine composition is derived by direct substitution and distribution.
+**Proofs used in this lesson:** dot-product identities follow from the definition of the dot product and Euclidean geometry; affine composition follows by substitution and distributivity; the neural-layer calculations are direct matrix multiplication and componentwise application of ReLU.
